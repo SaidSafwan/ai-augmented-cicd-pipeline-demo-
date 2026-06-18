@@ -1,20 +1,41 @@
-\# Architecture
-
-
+# Architecture
 
 Developer
+↓
+GitHub Repository
+↓
+GitHub Actions
 
-→ GitHub
+```
+├── AI Code Review
+├── Build Validation
+├── Automated Testing
+└── Deployment Pipeline
 
-→ GitHub Actions
+↓
+```
 
-→ AI Review
+Azure App Service
 
-→ Build \& Test
+```
+↓
+```
 
-→ Azure Deployment
+Application Insights
 
-→ Application Insights
+```
+├── Requests
+├── Exceptions
+├── Performance Metrics
+└── Application Logs
 
-→ AI Incident Analysis
+↓
+```
 
+AI Incident Analysis
+
+```
+↓
+```
+
+Recommendations & Root Cause Analysis
