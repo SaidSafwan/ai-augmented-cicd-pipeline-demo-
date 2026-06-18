@@ -25,4 +25,6 @@ Demo project for my HackersMang June 2026 talk:
 
 ## Project Status
 
-🚧 Under active development
+✅ Azure deployment completed
+🚧 GitHub Actions CI/CD in progress
+🚧 AI-powered DevOps workflows in progress
