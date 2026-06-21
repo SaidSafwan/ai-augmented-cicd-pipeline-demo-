@@ -27,5 +27,12 @@ app.UseHttpsRedirection();
 
 app.MapControllers();
 
-app.MapGet("/", () => Results.Redirect("/swagger"));
+app.MapGet("/api/openai-config", (IConfiguration config) =>
+{
+    return Results.Ok(new
+    {
+        Endpoint = config["AZURE_OPENAI_ENDPOINT"],
+        Deployment = config["AZURE_OPENAI_DEPLOYMENT_NAME"]
+    });
+});
 app.Run();

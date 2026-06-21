@@ -17,9 +17,9 @@ namespace Api.controllers
 
 
         [HttpPost]
-        public IActionResult Analyze(IncidentAnalysisRequest request)
+        public async Task<IActionResult> Analyze(IncidentAnalysisRequest request)
         {
-            var response = _service.Analyze(request);
+            var response = await _service.Analyze(request);
             return Ok(response);
         }
     }
