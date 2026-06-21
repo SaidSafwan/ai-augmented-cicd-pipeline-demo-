@@ -14,15 +14,22 @@ builder.Services.AddSingleton<CodeReviewService>();
 var app = builder.Build();
 
 // Configure pipeline
-if (app.Environment.IsDevelopment())
-{
+//if (app.Environment.IsDevelopment())
+//{
     app.UseSwagger();
     app.UseSwaggerUI();
-}
+//}
 
 app.UseHttpsRedirection();
 
 app.MapControllers();
 
-app.MapGet("/", () => Results.Redirect("/swagger"));
+app.MapGet("/api/health", () =>
+{
+    return Results.Ok(new
+    {
+        Status = "Healthy",
+        Version = "v2"
+    });
+}); 
 app.Run();
