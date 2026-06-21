@@ -22,7 +22,7 @@ namespace Api.services
                 _configuration["AZURE_OPENAI_API_KEY"];
 
             var deployment =
-                _configuration["AZURE_OPENAI_DEPLOYMENT"];
+                _configuration["AZURE_OPENAI_DEPLOYMENT_NAME"];
 
             var client = new AzureOpenAIClient(
                 new Uri(endpoint),

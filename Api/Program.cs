@@ -33,7 +33,7 @@ app.MapGet("/api/openai-check", (IConfiguration config) =>
     {
         EndpointExists = !string.IsNullOrEmpty(config["AZURE_OPENAI_ENDPOINT"]),
         KeyExists = !string.IsNullOrEmpty(config["AZURE_OPENAI_API_KEY"]),
-        DeploymentExists = !string.IsNullOrEmpty(config["AZURE_OPENAI_DEPLOYMENT"])
+        DeploymentExists = !string.IsNullOrEmpty(config["AZURE_OPENAI_DEPLOYMENT_NAME"])
     });
 });
 app.Run();
