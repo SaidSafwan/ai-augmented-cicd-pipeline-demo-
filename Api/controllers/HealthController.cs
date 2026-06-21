@@ -12,6 +12,7 @@ namespace Api.controllers
             return Ok(new
             {
                 status = "Healthy",
+                Version = "v2",
                 TimeStamp = DateTime.UtcNow
             });
         }

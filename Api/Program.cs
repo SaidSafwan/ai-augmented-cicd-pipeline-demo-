@@ -24,12 +24,5 @@ app.UseHttpsRedirection();
 
 app.MapControllers();
 
-app.MapGet("/api/health", () =>
-{
-    return Results.Ok(new
-    {
-        Status = "Healthy",
-        Version = "v2"
-    });
-}); 
+app.MapGet("/", () => Results.Redirect("/swagger"));
 app.Run();
