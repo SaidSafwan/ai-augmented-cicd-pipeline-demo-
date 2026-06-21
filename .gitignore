@@ -1,8 +1,17 @@
+# Build output
 bin/
 obj/
 
+# Visual Studio
 .vs/
-.vscode/
-
 *.user
 *.suo
+
+# Azure Publish Profiles
+**/Properties/PublishProfiles/
+
+# Azure Service Dependencies
+**/ServiceDependencies/
+
+# Application Insights local files
+*.PublishSettings
