@@ -10,6 +10,7 @@ builder.Services.AddSwaggerGen();
 
 //Register Service
 builder.Services.AddSingleton<CodeReviewService>();
+builder.Services.AddSingleton<IncidentAnalysisService>();
 
 var app = builder.Build();
 
