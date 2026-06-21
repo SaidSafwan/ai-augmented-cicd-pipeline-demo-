@@ -12,6 +12,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<CodeReviewService>();
 builder.Services.AddSingleton<IncidentAnalysisService>();
 
+builder.Services.AddApplicationInsightsTelemetry();
+
 var app = builder.Build();
 
 // Configure pipeline
