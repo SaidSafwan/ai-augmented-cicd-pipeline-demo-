@@ -27,12 +27,13 @@ app.UseHttpsRedirection();
 
 app.MapControllers();
 
-app.MapGet("/api/openai-config", (IConfiguration config) =>
+app.MapGet("/api/openai-check", (IConfiguration config) =>
 {
     return Results.Ok(new
     {
-        Endpoint = config["AZURE_OPENAI_ENDPOINT"],
-        Deployment = config["AZURE_OPENAI_DEPLOYMENT_NAME"]
+        EndpointExists = !string.IsNullOrEmpty(config["AZURE_OPENAI_ENDPOINT"]),
+        KeyExists = !string.IsNullOrEmpty(config["AZURE_OPENAI_API_KEY"]),
+        DeploymentExists = !string.IsNullOrEmpty(config["AZURE_OPENAI_DEPLOYMENT"])
     });
 });
 app.Run();

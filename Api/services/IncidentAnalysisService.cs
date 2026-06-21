@@ -19,7 +19,7 @@ namespace Api.services
                 _configuration["AZURE_OPENAI_ENDPOINT"];
 
             var key =
-                _configuration["AZURE_OPENAI_KEY"];
+                _configuration["AZURE_OPENAI_API_KEY"];
 
             var deployment =
                 _configuration["AZURE_OPENAI_DEPLOYMENT"];
