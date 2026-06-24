@@ -1,38 +1,64 @@
 # Demo Flow
 
 ```text
-Developer
-    │
-    ▼
-GitHub Repository
-    │
-    ▼
-GitHub Actions CI
-    │
-    ▼
-Build Validation
-    │
-    ▼
-GitHub Actions CD
-    │
-    ▼
-Azure App Service
-    │
-    ▼
-Application Insights
-    │
-    ▼
-Production Incident
-    │
-    ▼
-AI Incident Analysis API
-    │
-    ▼
-Azure OpenAI GPT-4.1-mini
-    │
-    ▼
-Root Cause Analysis
-    │
-    ▼
-Recommendation
+┌─────────────────────┐
+│      Developer      │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ GitHub Repository   │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ GitHub Actions CI   │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ Build Validation    │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ GitHub Actions CD   │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ Azure App Service   │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│Application Insights │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ Production Incident │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ AI Incident Analysis│
+│        API          │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ Azure OpenAI        │
+│ GPT-4.1-mini        │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ Root Cause Analysis │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ Recommendation      │
+└─────────────────────┘
 ```
