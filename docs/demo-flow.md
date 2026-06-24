@@ -1,21 +1,38 @@
 # Demo Flow
 
+```text
 Developer
-↓
+    │
+    ▼
 GitHub Repository
-↓
+    │
+    ▼
 GitHub Actions CI
-↓
-AI Code Review
-↓
-Build & Test
-↓
+    │
+    ▼
+Build Validation
+    │
+    ▼
 GitHub Actions CD
-↓
+    │
+    ▼
 Azure App Service
-↓
+    │
+    ▼
 Application Insights
-↓
-AI Incident Analysis
-↓
-Production Insights & Recommendations
+    │
+    ▼
+Production Incident
+    │
+    ▼
+AI Incident Analysis API
+    │
+    ▼
+Azure OpenAI GPT-4.1-mini
+    │
+    ▼
+Root Cause Analysis
+    │
+    ▼
+Recommendation
+```
