@@ -40,10 +40,13 @@ namespace Api.services
                 Logs:
                 {request.Logs}
 
-                Return:
-                1. Severity
-                2. Root Cause
-                3. Recommendation
+                Return ONLY valid JSON:
+
+                {{
+                  ""severity"": ""High|Medium|Low"",
+                  ""rootCause"": ""..."",
+                  ""recommendation"": ""...""
+                }}
                 ";
 
             var response =
