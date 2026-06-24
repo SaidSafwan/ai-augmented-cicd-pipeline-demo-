@@ -13,8 +13,9 @@ namespace Api.services
         {
             _configuration = configuration;
         }
+
         public async Task<IncidentAnalysisResponse> Analyze(
-        IncidentAnalysisRequest request)
+            IncidentAnalysisRequest request)
         {
             var endpoint =
                 _configuration["AZURE_OPENAI_ENDPOINT"];
@@ -33,25 +34,26 @@ namespace Api.services
                 client.GetChatClient(deployment);
 
             var prompt = $@"
-                Analyze this production incident.
+Analyze this production incident.
 
-                Error:
-                {request.Error}
+Error:
+{request.Error}
 
-                Logs:
-                {request.Logs}
+Logs:
+{request.Logs}
 
-                Return ONLY valid JSON.
+Return ONLY valid JSON in this format:
 
-                {{
-                  ""severity"": ""High"",
-                  ""rootCause"": ""..."",
-                  ""recommendation"": ""...""
-                }}
+{{
+    ""severity"": ""High"",
+    ""rootCause"": ""..."",
+    ""recommendation"": ""...""
+}}
 
-                Do not wrap the response in markdown.
-                Do not use ```json.
-                ";
+Do not use markdown.
+Do not use code blocks.
+Do not add explanations.
+";
 
             var response =
                 await chatClient.CompleteChatAsync(prompt);
@@ -59,10 +61,46 @@ namespace Api.services
             string result =
                 response.Value.Content[0].Text;
 
-            var analysis =
-                JsonSerializer.Deserialize<IncidentAnalysisResponse>(result);
+            Console.WriteLine("========== AI RESPONSE ==========");
+            Console.WriteLine(result);
+            Console.WriteLine("=================================");
 
-            return analysis!;
+            try
+            {
+                result = result
+                    .Replace("```json", "")
+                    .Replace("```", "")
+                    .Trim();
+
+                var analysis =
+                    JsonSerializer.Deserialize<IncidentAnalysisResponse>(
+                        result,
+                        new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true
+                        });
+
+                if (analysis == null)
+                {
+                    return new IncidentAnalysisResponse
+                    {
+                        Severity = "ERROR",
+                        RootCause = "Deserialization returned null",
+                        Recommendation = result
+                    };
+                }
+
+                return analysis;
+            }
+            catch (Exception ex)
+            {
+                return new IncidentAnalysisResponse
+                {
+                    Severity = "ERROR",
+                    RootCause = ex.Message,
+                    Recommendation = result
+                };
+            }
         }
     }
 }
