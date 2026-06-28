@@ -16,9 +16,13 @@ This project demonstrates a modern DevOps workflow that combines:
 - Continuous Deployment (CD)
 - Cloud Hosting
 - Production Monitoring
-- AI-Powered Incident Analysis
+- **AI embedded in the pipeline** (not exposed as REST endpoints)
 
-The solution automatically deploys code to Azure, monitors application health through Application Insights, and uses Azure OpenAI to analyze production incidents and generate actionable recommendations.
+AI is **not** a chatbot API. It runs as automated steps **inside GitHub Actions**:
+on every push to `main`, the `AiPipeline` CLI reviews the diff, generates tests,
+validates the deployment, and analyzes incidents on failure — **gating the build on
+critical findings**. The app itself is a plain ASP.NET Core service that gets built,
+deployed to Azure, and monitored through Application Insights.
 
 ---
 
@@ -26,39 +30,22 @@ The solution automatically deploys code to Azure, monitors application health th
 
 ```text
 Developer
-    │
+    │  git push (main)
     ▼
-GitHub Repository
+GitHub Actions
     │
-    ▼
-GitHub Actions CI
-    │
-    ▼
-Build Validation
-    │
-    ▼
-GitHub Actions CD
-    │
-    ▼
-Azure App Service
-    │
-    ▼
-Application Insights
-    │
-    ▼
-Production Incident
-    │
-    ▼
-AI Incident Analysis API
-    │
-    ▼
-Azure OpenAI GPT-4.1-mini
-    │
-    ▼
-Root Cause Analysis
-    │
-    ▼
-Recommendation
+    ├─▶ AI Code Review ........... gates on Critical/High  ─┐
+    ├─▶ Build                                               │ AiPipeline CLI
+    ├─▶ AI Test Generation ....... advisory artifact        │      +
+    ├─▶ Publish & Deploy ─▶ Azure App Service               │ Azure OpenAI
+    ├─▶ AI Deployment Validation . gates on critical risk   │ GPT-4.1-mini
+    └─▶ AI Incident Analysis ..... runs on failure  ───────┘
+                    │
+                    ▼
+        Reports written to the GitHub Actions Step Summary
+                    │
+                    ▼
+        Azure App Service  ─▶  Application Insights (monitoring)
 ```
 
 ---
@@ -66,11 +53,20 @@ Recommendation
 ## Objectives
 
 - Automated CI/CD with GitHub Actions
-- Azure App Service Deployment
-- Application Monitoring with Application Insights
-- AI-Powered Incident Analysis
-- Azure OpenAI Integration
-- Production Observability
+- AI code review as a pipeline quality gate
+- AI test generation in CI
+- AI deployment validation gate
+- AI incident analysis on pipeline failure
+- Azure App Service Deployment + Application Insights monitoring
+
+## Required GitHub Secrets
+
+| Secret | Purpose |
+|---|---|
+| `AZURE_OPENAI_ENDPOINT` | Azure OpenAI resource endpoint |
+| `AZURE_OPENAI_API_KEY` | Azure OpenAI API key |
+| `AZURE_OPENAI_DEPLOYMENT_NAME` | GPT-4.1-mini deployment name |
+| `AZURE_WEBAPP_PUBLISH_PROFILE` | Azure App Service publish profile |
 
 ---
 
@@ -97,20 +93,27 @@ Recommendation
 - Performance Metrics
 - Log Collection
 
-### AI Incident Analysis
+### AI Pipeline Steps (`AiPipeline` CLI)
 
-Analyze production incidents using Azure OpenAI.
+The AI runs as a console tool the workflow invokes — no REST endpoints. Each command
+writes a Markdown report to the GitHub Actions Step Summary and uses its exit code to
+gate the build.
 
-Example request:
+| Command | Role | Gate |
+|---|---|---|
+| `review --diff <file>` | Reviews the pushed diff for bugs / security / perf / smells | Fails build on **Critical/High** |
+| `gen-tests --files <a.cs,..> --out <dir>` | Generates suggested xUnit tests | Advisory (artifact) |
+| `validate-deploy --log <file>` | Validates the build/publish/deploy log | Fails build on **critical risk** |
+| `analyze-incident --log <file>` | Root-cause analysis when the pipeline fails | Advisory |
 
-```json
-{
-  "error": "500",
-  "logs": "NullReferenceException"
-}
+Run locally (set the `AZURE_OPENAI_*` env vars first):
+
+```bash
+git diff HEAD~1 HEAD > diff.patch
+dotnet run --project AiPipeline -- review --diff diff.patch
 ```
 
-Example response:
+Example incident-analysis output (written to the Step Summary):
 
 ```json
 {
@@ -126,7 +129,8 @@ Example response:
 
 ### Backend
 
-- ASP.NET Core (.NET 8)
+- ASP.NET Core (.NET 8) — deployable app (`/api/health` + Swagger)
+- `AiPipeline` — .NET 8 console CLI (the AI pipeline steps)
 - C#
 
 ### DevOps
@@ -155,27 +159,23 @@ Example response:
 ### Completed
 
 - GitHub Repository Setup
-- ASP.NET Core Web API
-- Azure Resource Group
-- Azure App Service
-- Application Insights Integration
-- Health Check Endpoint
-- GitHub Actions CI/CD
-- Automated Azure Deployment
-- Swagger Deployment
+- ASP.NET Core Web API (health-only deployable app)
+- Azure Resource Group / App Service / Application Insights
+- GitHub Actions CI/CD with Automated Azure Deployment
 - Azure OpenAI Integration
-- AI Incident Analysis API
+- `AiPipeline` CLI: AI Code Review, Test Generation, Deployment Validation, Incident Analysis
+- AI code review + deployment validation quality gates
 
 ---
 
 ## Future Enhancements
 
-- AI-Powered Pull Request Review
-- AI Test Case Generation
+- PR-triggered AI review with inline PR comments
+- Real xUnit test project + `dotnet test` gate (currently gen-tests is advisory)
+- Pull incident logs directly from Application Insights
 - Automated Remediation Suggestions
 - Teams/Slack Notifications
 - RAG-Based Incident Knowledge Base
-- Intelligent Production Alert Analysis
 
 ---
 

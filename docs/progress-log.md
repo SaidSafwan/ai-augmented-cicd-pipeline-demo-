@@ -69,6 +69,23 @@
 
 ---
 
+## Day 6 - AI Moved Into the Pipeline (2026-06-26)
+
+### Completed
+
+- Removed all AI REST endpoints from the Web API (no more chatbot-style API)
+- Built `AiPipeline`, a .NET 8 console CLI with four subcommands:
+  `review`, `gen-tests`, `validate-deploy`, `analyze-incident`
+- AI now runs as steps inside GitHub Actions on every push to `main`
+- AI Code Review runs on the commit diff and **gates** the build (fails on Critical/High)
+- AI Deployment Validation **gates** on critical deployment risk
+- AI Test Generation produces suggested xUnit tests as a build artifact (advisory)
+- AI Incident Analysis runs automatically when the pipeline fails
+- All AI output is written to the GitHub Actions **Step Summary**
+- Web API reduced to the deployable sample app (`/api/health` + Swagger)
+
+---
+
 ## Project Status
 
 ### Completed Components
@@ -79,7 +96,11 @@
 - Azure App Service
 - Application Insights
 - Azure OpenAI Integration
-- AI Incident Analysis API
+- AiPipeline CLI (AI as pipeline steps)
+- AI Code Review quality gate
+- AI Deployment Validation quality gate
+- AI Test Generation (artifact)
+- AI Incident Analysis (on failure)
 - Production Deployment
 - Automated Monitoring
 

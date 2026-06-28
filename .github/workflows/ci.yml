@@ -1,4 +1,4 @@
-name: Build ASP.NET API
+name: AI-Augmented CI/CD Pipeline
 
 on:
   push:
@@ -6,30 +6,88 @@ on:
       - main
 
 jobs:
-  build:
+  build-deploy:
     runs-on: ubuntu-latest
 
+    # Azure OpenAI config flows into the AiPipeline CLI as environment variables.
+    # Add these three as repository secrets (Settings → Secrets and variables → Actions).
+    env:
+      AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+      AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+      AZURE_OPENAI_DEPLOYMENT_NAME: ${{ secrets.AZURE_OPENAI_DEPLOYMENT_NAME }}
+
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history so we can diff the pushed commits
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '8.0.x'
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
 
-    - name: Restore Dependencies
-      run: dotnet restore Api/Api.csproj
+      - name: Build AI pipeline tool
+        run: dotnet build AiPipeline/AiPipeline.csproj --configuration Release
 
-    - name: Build Project
-      run: dotnet build Api/Api.csproj --configuration Release --no-restore
+      # ── Compute the diff of the commits in this push ───────────────────────
+      - name: Compute changed code
+        id: diff
+        shell: bash
+        run: |
+          BEFORE="${{ github.event.before }}"
+          AFTER="${{ github.sha }}"
+          EMPTY_TREE="$(git hash-object -t tree /dev/null)"
+          # First push / force push / unknown base → diff against parent or empty tree.
+          if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
+            BEFORE="$(git rev-parse HEAD~1 2>/dev/null || echo "$EMPTY_TREE")"
+          fi
+          echo "Diffing $BEFORE..$AFTER"
+          git diff "$BEFORE" "$AFTER" > diff.patch || true
+          CHANGED=$(git diff --name-only "$BEFORE" "$AFTER" -- '*.cs' | grep -v 'Tests\.cs$' | paste -sd, -)
+          echo "changed_files=$CHANGED" >> "$GITHUB_OUTPUT"
+          echo "Changed C# files: ${CHANGED:-none}"
 
-    - name: Publish Project
-      run: dotnet publish Api/Api.csproj --configuration Release --output ./publish
-      
-    - name: Deploy to Azure Web App
-      uses: azure/webapps-deploy@v3
-      with:
-        app-name: hackersmang-api-safwan
-        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-        package: ./publish
+      # ── AI Code Review (quality gate: fails on Critical/High) ──────────────
+      - name: AI Code Review
+        run: dotnet run --project AiPipeline --configuration Release --no-build -- review --diff diff.patch
+
+      # ── Build the application ──────────────────────────────────────────────
+      - name: Restore Dependencies
+        run: dotnet restore Api/Api.csproj
+
+      - name: Build Project
+        shell: bash
+        run: dotnet build Api/Api.csproj --configuration Release --no-restore 2>&1 | tee -a deploy.log
+
+      # ── AI Test Generation (advisory — uploaded as an artifact) ────────────
+      - name: AI Test Generation
+        run: dotnet run --project AiPipeline --configuration Release --no-build -- gen-tests --files "${{ steps.diff.outputs.changed_files }}" --out generated-tests
+
+      - name: Upload generated tests
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-generated-tests
+          path: generated-tests/
+          if-no-files-found: ignore
+
+      # ── Publish & Deploy ───────────────────────────────────────────────────
+      - name: Publish Project
+        shell: bash
+        run: dotnet publish Api/Api.csproj --configuration Release --output ./publish 2>&1 | tee -a deploy.log
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: hackersmang-api-safwan
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: ./publish
+
+      # ── AI Deployment Validation (quality gate: fails on critical risk) ────
+      - name: AI Deployment Validation
+        run: dotnet run --project AiPipeline --configuration Release --no-build -- validate-deploy --log deploy.log
+
+      # ── AI Incident Analysis (only runs if something above failed) ─────────
+      - name: AI Incident Analysis
+        if: failure()
+        run: dotnet run --project AiPipeline --configuration Release --no-build -- analyze-incident --log deploy.log

@@ -1,0 +1,23 @@
+﻿I'm working on the Api project in this solution (the ASP.NET Core 8 Web API at /Api). It currently has only HealthController.cs and is deployed to Azure App Service with Application Insights wired up via the AiPipeline.
+
+I need you to add three "demo lever" endpoints to a new ProductsController so I can deliberately trigger Azure Monitor alerts during a live demo. Follow these requirements exactly:
+
+REQUIREMENTS
+1. Create /Api/controllers/ProductsController.cs (lowercase folder name to match the existing convention — note HealthController.cs lives in /Api/controllers/ not /Api/Controllers/).
+2. Add these endpoints:
+   - GET /api/products → returns a hardcoded in-memory list of 5 products (Id, Name, Price). No params.
+   - GET /api/products/{id} → returns one product by id. Supports TWO optional query params:
+     • ?slow=true → await Task.Delay(5000) before returning, to simulate a slow query
+     • ?crash=true → throw new InvalidOperationException("Simulated downstream failure for demo") — DO NOT catch it; let ASP.NET return a 500 so App Insights records it as a failed request
+   - POST /api/orders → accepts { productId, quantity }, appends to a private STATIC List<Order> (this is the memory leak lever — static so entries never get GC'd). Return 201 with the created order.
+3. Use minimal models — a Product record and an Order record at the bottom of the same file. Mock data only, no DB.
+4. Make sure Application Insights still tracks requests — do not add try/catch that swallows exceptions on the crash endpoint. The exception MUST bubble up so App Insights sees it.
+5. Verify Program.cs registers controllers and Application Insights. If AddApplicationInsightsTelemetry() is missing, add it reading the connection string from configuration key "ApplicationInsights:ConnectionString" with a fallback to APPLICATIONINSIGHTS_CONNECTION_STRING env var.
+6. Add to appsettings.json a placeholder "ApplicationInsights": { "ConnectionString": "" } so I can fill it from the portal.
+7. Update Api.http to include sample requests for all three new endpoints (one each: normal, slow, crash, and a POST order).
+8. DO NOT touch the AiPipeline project, ci.yml, or anything outside /Api.
+
+After making changes, give me:
+- A summary of files changed
+- The exact curl/PowerShell commands I can run locally to verify each endpoint (including the slow and crash ones)
+- A 1-line git commit message
