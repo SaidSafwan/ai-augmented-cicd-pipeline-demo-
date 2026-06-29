@@ -93,6 +93,27 @@ GitHub Actions
 - Performance Metrics
 - Log Collection
 
+### Demo Lever Endpoints (`ProductsController`)
+
+The deployable Web API also carries a small set of **demo lever** endpoints used to
+deliberately trigger Azure Monitor alerts on stage — so the audience can watch
+Application Insights light up (and the AI incident analysis react) in real time. They use
+mock in-memory data only; no database.
+
+| Endpoint | Lever | What it demonstrates |
+|---|---|---|
+| `GET /api/products` | — | Normal request (baseline, returns 5 mock products) |
+| `GET /api/products/{id}` | — | Normal single-item request |
+| `GET /api/products/{id}?slow=true` | **Slow** | `Task.Delay(5000)` → high server-response-time alert |
+| `GET /api/products/{id}?crash=true` | **Crash** | Uncaught exception → HTTP 500 → failed-request alert |
+| `POST /api/orders` | **Memory leak** | Appends to a `static` list that never gets GC'd → memory-growth alert |
+
+The crash lever intentionally lets the exception bubble up (no swallowing `try/catch`) so
+Application Insights records it as a failed request. Application Insights is registered
+**only when a connection string is configured** (`ApplicationInsights:ConnectionString`,
+falling back to the `APPLICATIONINSIGHTS_CONNECTION_STRING` env var); with an empty
+placeholder it stays off so the app runs cleanly in local dev.
+
 ### AI Pipeline Steps (`AiPipeline` CLI)
 
 The AI runs as a console tool the workflow invokes — no REST endpoints. Each command
@@ -129,7 +150,7 @@ Example incident-analysis output (written to the Step Summary):
 
 ### Backend
 
-- ASP.NET Core (.NET 8) — deployable app (`/api/health` + Swagger)
+- ASP.NET Core (.NET 8) — deployable app (`/api/health`, products/orders demo-lever endpoints + Swagger)
 - `AiPipeline` — .NET 8 console CLI (the AI pipeline steps)
 - C#
 
@@ -159,7 +180,7 @@ Example incident-analysis output (written to the Step Summary):
 ### Completed
 
 - GitHub Repository Setup
-- ASP.NET Core Web API (health-only deployable app)
+- ASP.NET Core Web API (deployable app: health + products/orders demo-lever endpoints)
 - Azure Resource Group / App Service / Application Insights
 - GitHub Actions CI/CD with Automated Azure Deployment
 - Azure OpenAI Integration

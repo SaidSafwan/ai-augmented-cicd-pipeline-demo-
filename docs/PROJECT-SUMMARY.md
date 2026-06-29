@@ -90,10 +90,28 @@ Azure OpenAI secrets flow in via job-level `env`.
   `AiEngineeringAssistantService`.
 - Removed the AI service registration and the `/api/openai-check` endpoint from `Program.cs`.
 - Removed the `Azure.AI.OpenAI` NuGet package from the API project.
-- Result: the API is now just `GET /api/health` (via `HealthController`) + Swagger.
+- Result: the API is now `GET /api/health` (via `HealthController`) + Swagger.
 - Bug fix found during testing: `HealthController` and a duplicate minimal-API
   `/api/health` both matched the same route (`AmbiguousMatchException` → HTTP 500).
   Removed the duplicate; health now returns 200.
+
+### 3e. Added demo-lever endpoints (`ProductsController`)
+
+To make the **monitoring** half of the talk tangible, the Web API gained a
+`ProductsController` with mock in-memory data and three levers for deliberately tripping
+Azure Monitor alerts on stage:
+
+- `GET /api/products` / `GET /api/products/{id}` — normal baseline requests.
+- `?slow=true` — `Task.Delay(5000)` → server-response-time alert.
+- `?crash=true` — uncaught `InvalidOperationException` → HTTP 500 (no swallowing
+  `try/catch`, so App Insights logs a failed request) → failure-rate alert.
+- `POST /api/orders` — appends to a `static` list that is never GC'd → memory-growth alert.
+
+App Insights startup fix: the AspNetCore 3.x SDK is OpenTelemetry-based and throws at
+startup when the connection-string key is present but empty. Telemetry is now registered
+**only when a non-empty connection string is resolved** (`ApplicationInsights:ConnectionString`,
+falling back to the `APPLICATIONINSIGHTS_CONNECTION_STRING` env var), so the empty
+placeholder in `appsettings.json` lets local dev run cleanly.
 
 ### 3d. Updated docs
 
@@ -132,9 +150,12 @@ These were chosen deliberately (and could be revisited in the final version):
 ## 6. Current repository layout (after the change)
 
 ```
-Api/                       ASP.NET Core app that gets built & deployed (health + Swagger)
+Api/                       ASP.NET Core app that gets built & deployed (health + Swagger + demo levers)
   controllers/HealthController.cs
-  Program.cs
+  controllers/ProductsController.cs   demo-lever endpoints (slow / crash / memory-leak)
+  appsettings.json         ApplicationInsights:ConnectionString placeholder
+  Api.http                 sample requests for the demo-lever endpoints
+  Program.cs               conditional App Insights registration (only when configured)
   Api.csproj
 AiPipeline/                .NET 8 console CLI — the AI pipeline steps
   Program.cs               arg dispatch (review | gen-tests | validate-deploy | analyze-incident)

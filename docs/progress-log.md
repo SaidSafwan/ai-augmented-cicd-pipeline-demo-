@@ -86,6 +86,24 @@
 
 ---
 
+## Day 7 - Monitoring Demo Levers (2026-06-28)
+
+### Completed
+
+- Added `ProductsController` to the Web API with mock in-memory products/orders
+- Added three **demo-lever endpoints** to deliberately trigger Azure Monitor alerts live:
+  - `?slow=true` → 5s `Task.Delay` (server-response-time alert)
+  - `?crash=true` → uncaught exception → HTTP 500 (failed-request alert)
+  - `POST /api/orders` → appends to a `static` list (memory-growth alert)
+- Crash lever intentionally lets the exception bubble up so App Insights logs the failure
+- Added `ApplicationInsights:ConnectionString` placeholder to `appsettings.json`
+- Fixed startup crash: the AspNetCore 3.x (OpenTelemetry-based) SDK threw on an empty
+  connection string — telemetry is now registered only when a connection string is present
+  (config key, falling back to `APPLICATIONINSIGHTS_CONNECTION_STRING`)
+- Updated `Api.http` with sample requests for all new endpoints (normal/slow/crash/order)
+
+---
+
 ## Project Status
 
 ### Completed Components
@@ -101,6 +119,7 @@
 - AI Deployment Validation quality gate
 - AI Test Generation (artifact)
 - AI Incident Analysis (on failure)
+- Demo-lever endpoints (slow / crash / memory-leak) for live Azure Monitor alerts
 - Production Deployment
 - Automated Monitoring
 
