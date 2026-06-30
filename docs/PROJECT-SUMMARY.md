@@ -1,11 +1,5 @@
 # Project Summary — AI-Augmented CI/CD Pipeline
 
-> **Purpose of this file:** a self-contained context document to paste into a new
-> Claude chat. It explains what the project was, why, what we changed, and why — so
-> you can then write a precise prompt for the *final* version you actually want.
-
----
-
 ## 1. What the project is (high level)
 
 A demo for a conference talk — *"From Commit to Production: Building an AI-Augmented
